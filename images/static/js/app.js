@@ -1,9 +1,13 @@
 /**
-This file contains all the Javascript code to power the app. You'll 
+This file contains all the Javascript code to power the app. You'll
 need to add extra functions and the Mixpanel integration code in this
 file.
 **/
 
+function trackCorgiView(chosenCorgi) {
+    mixpanel.track('Got Corgi', {corgi_url: chosenCorgi})
+    mixpanel.people.increment('Lifetime Corgis')
+}
 
 // changes the image to a random corgi via hardcoded links
 function getCorgi() {
@@ -27,4 +31,59 @@ function getCorgi() {
     var randomNumber = Math.floor((Math.random() * corgis.length));
     var chosenCorgi = corgis[randomNumber];
     document.getElementById("corgi_image").src = chosenCorgi;
+    trackCorgiView(chosenCorgi)
 }
+
+function mixpanelReady(){
+    if($("#user_id")){
+        mixpanel.identify($("#user_id").html())
+    }
+
+    var pageTitle = document.getElementsByTagName("title")[0].innerHTML
+    mixpanel.track("Page Viewed", {page: pageTitle})
+
+    if(pageTitle === 'index-logged-in') {
+        // A new corgi image is shown by default on this page
+        chosenCorgi = document.getElementById("corgi_image").src
+        trackCorgiView(chosenCorgi)
+    }
+
+    if($("#login-form")){
+        $("#login-form").submit(function(){
+            mixpanel.track('Submitted Login Form', {username: $("#id_username").val()})
+            return true
+        })
+    }
+
+    if($("#signup-form")){
+        $("#mp_distinct_id").val(mixpanel.get_distinct_id())
+        $("#signup-form").submit(function(){
+            mixpanel.track('Submitted Signup Form', {username: $("#id_username").val()})
+            return true
+        })
+    }
+
+    if($("a#logout-button")){
+
+        $("a#logout-button").click(function(e){
+            e.preventDefault()
+            mixpanel.track("Logout Clicked")
+            mixpanel.reset()
+            window.location.href = $("a#logout-button")[0].href
+        })
+    }
+}
+
+// this check probably isn't necessary if you just place the mixpanel snippet above where app.js is loaded
+function waitForMixpanel(){
+    if(mixpanel && mixpanel.__loaded){
+        console.log(mixpanel.persistence.properties())
+        mixpanelReady()
+    } else {
+        setTimeout(waitForMixpanel, 50)
+    }
+}
+
+$(document).ready(function(){
+    waitForMixpanel()
+})

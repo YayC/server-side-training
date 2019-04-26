@@ -1,10 +1,12 @@
 {% extends 'images/base.html' %}
+{% block title %}Signup{% endblock %}
 
 {% block content %}
     <h1>Sign up</h1>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+        <input type="hidden" name="mp_distinct_id" id="mp_distinct_id">
         <button class="btn btn-success" type="submit">Sign up</button>
     </form>
 {% endblock %}
